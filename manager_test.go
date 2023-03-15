@@ -41,9 +41,9 @@ func TestRediser(t *testing.T) {
 	assert.Nil(t, m.Client("test").Set(ctx, "bbb", "2", time.Second*5).Err())
 	assert.Equal(t, "2", m.Client("test").Get(ctx, "bbb").Val())
 	assert.Error(t, m.Client().Get(ctx, "bbb").Err())
-	assert.Equal(t, nil, m.Client().Get(ctx, "bbb").Val())
+	assert.Equal(t, "", m.Client().Get(ctx, "bbb").Val())
 
 	// test sleep
 	time.Sleep(time.Second * 3)
-	assert.Equal(t, nil, m.Client().Get(ctx, "aaa").Val())
+	assert.Equal(t, "", m.Client().Get(ctx, "aaa").Val())
 }
