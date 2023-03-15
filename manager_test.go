@@ -40,6 +40,8 @@ func TestRediser(t *testing.T) {
 	// use db 1
 	assert.Nil(t, m.Client("test").Set(ctx, "bbb", "2", time.Second*5).Err())
 	assert.Equal(t, "2", m.Client("test").Get(ctx, "bbb").Val())
+
+	// use db 0 to get db 1
 	assert.Error(t, m.Client().Get(ctx, "bbb").Err())
 	assert.Equal(t, "", m.Client().Get(ctx, "bbb").Val())
 
