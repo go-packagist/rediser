@@ -16,9 +16,9 @@ type Manager struct {
 func New(config *Config) *Manager {
 	return &Manager{
 		config:         config,
-		relovedClient:  make(map[string]*redis.Client),
-		relovedCluster: make(map[string]*redis.ClusterClient),
-		relovedRing:    make(map[string]*redis.Ring),
+		relovedClient:  make(map[string]*redis.Client, len(config.ClientConfig.Connections)),
+		relovedCluster: make(map[string]*redis.ClusterClient, len(config.ClusterConfig.Connections)),
+		relovedRing:    make(map[string]*redis.Ring, len(config.RingConfig.Connections)),
 		rw:             sync.RWMutex{},
 	}
 }
