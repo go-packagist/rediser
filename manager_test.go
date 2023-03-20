@@ -49,3 +49,33 @@ func TestRediser(t *testing.T) {
 	time.Sleep(time.Second * 3)
 	assert.Equal(t, "", m.Client().Get(ctx, "aaa").Val())
 }
+
+func BenchmarkMap(b *testing.B) {
+	m := New(&Config{
+		ClientConfig: &ClientConfig{
+			Default: "default",
+			Connections: map[string]ConnectionClientFunc{
+				"default": func() *redis.Client {
+					return redis.NewClient(&redis.Options{
+						Addr:     "localhost:6379",
+						Password: "", // no password set
+						DB:       0,  // use default DB
+					})
+				},
+				"test": func() *redis.Client {
+					return redis.NewClient(&redis.Options{
+						Addr:     "localhost:6379",
+						Password: "", // no password set
+						DB:       1,  // use default DB
+					})
+				},
+			},
+		},
+	})
+
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			go m.Client().Get(ctx, "default").Val()
+		}
+	})
+}
