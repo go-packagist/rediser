@@ -5,16 +5,15 @@ import (
 	"sync"
 )
 
-// Config is the config of redis.
-var alias = map[string]string{
-	"client":  "client",
-	"cluster": "cluster",
-	"ring":    "ring",
-}
+var (
+	aliasClient  = "client"
+	aliasCluster = "cluster"
+	aliasRing    = "ring"
+)
 
 type Manager struct {
-	config  *Config
-	reloved sync.Map
+	config   *Config
+	resolved sync.Map
 }
 
 // New a redis manager.
@@ -35,7 +34,7 @@ func (m *Manager) Client(name ...string) *redis.Client {
 
 // resolveClient resolve client.
 func (m *Manager) resolveClient(name string) *redis.Client {
-	if db, ok := m.getReloved(alias["client"], name); ok {
+	if db, ok := m.getResolved(aliasClient, name); ok {
 		return db.(*redis.Client)
 	}
 
@@ -44,7 +43,7 @@ func (m *Manager) resolveClient(name string) *redis.Client {
 	}
 
 	reloved := m.config.ClientConfig.Connections[name]()
-	m.setReloved(alias["client"], name, reloved)
+	m.setResolved(aliasClient, name, reloved)
 
 	return reloved
 }
@@ -60,7 +59,7 @@ func (m *Manager) Cluster(name ...string) *redis.ClusterClient {
 
 // resolveCluster resolve cluster.
 func (m *Manager) resolveCluster(name string) *redis.ClusterClient {
-	if db, ok := m.getReloved(alias["cluster"], name); ok {
+	if db, ok := m.getResolved(aliasCluster, name); ok {
 		return db.(*redis.ClusterClient)
 	}
 
@@ -69,7 +68,7 @@ func (m *Manager) resolveCluster(name string) *redis.ClusterClient {
 	}
 
 	reloved := m.config.ClusterConfig.Connections[name]()
-	m.setReloved(alias["cluster"], name, reloved)
+	m.setResolved(aliasCluster, name, reloved)
 
 	return reloved
 }
@@ -85,7 +84,7 @@ func (m *Manager) Ring(name ...string) *redis.Ring {
 
 // resolveRing resolve ring.
 func (m *Manager) resolveRing(name string) *redis.Ring {
-	if db, ok := m.getReloved(alias["ring"], name); ok {
+	if db, ok := m.getResolved(aliasRing, name); ok {
 		return db.(*redis.Ring)
 	}
 
@@ -94,20 +93,20 @@ func (m *Manager) resolveRing(name string) *redis.Ring {
 	}
 
 	reloved := m.config.RingConfig.Connections[name]()
-	m.setReloved(alias["ring"], name, reloved)
+	m.setResolved(aliasRing, name, reloved)
 
 	return reloved
 }
 
-// getReloved get reloved.
-func (m *Manager) getReloved(prefix, name string) (interface{}, bool) {
-	return m.reloved.Load(prefix + ":" + name)
+// getResolved get resolved.
+func (m *Manager) getResolved(prefix, name string) (interface{}, bool) {
+	return m.resolved.Load(prefix + ":" + name)
 
 }
 
-// setReloved set reloved.
-func (m *Manager) setReloved(prefix, name string, v interface{}) *Manager {
-	m.reloved.Store(prefix+":"+name, v)
+// setResolved set resolved.
+func (m *Manager) setResolved(prefix, name string, v interface{}) *Manager {
+	m.resolved.Store(prefix+":"+name, v)
 
 	return m
 }
