@@ -1,5 +1,6 @@
 # Redis'er(Redis Manager)
 
+![Go](https://badgen.net/badge/Go/%3E=1.18/green)
 [![Go Version](https://badgen.net/github/release/go-packagist/rediser/stable)](https://github.com/go-packagist/rediser/releases)
 [![GoDoc](https://pkg.go.dev/badge/github.com/go-packagist/rediser/v2)](https://pkg.go.dev/github.com/go-packagist/rediser/v2)
 [![codecov](https://codecov.io/gh/go-packagist/rediser/branch/master/graph/badge.svg?token=5TWGQ9DIRU)](https://codecov.io/gh/go-packagist/rediser)
