@@ -1,4 +1,4 @@
-module github.com/go-packagist/rediser
+module github.com/go-packagist/rediser/v2
 
 go 1.20
 
