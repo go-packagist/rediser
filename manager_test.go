@@ -54,6 +54,9 @@ func TestRediser(t *testing.T) {
 	assert.Panics(t, func() {
 		m.Connect("not-found").Get(ctx, "aaa").Val()
 	})
+
+	// type
+	assert.Equal(t, "localhost:6379", m.Connect("db1").(*redis.Client).Options().Addr)
 }
 
 func BenchmarkMap(b *testing.B) {
