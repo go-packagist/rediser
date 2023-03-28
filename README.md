@@ -41,6 +41,15 @@ func main() {
 				Password: "", // no password set
 				DB:       1,  // use default DB
 			},
+			"db3": &redis.ClusterOptions{
+				Addrs: []string{"localhost:6379", "localhost:6379"},
+			},
+			"db4": &redis.RingOptions{
+				Addrs: map[string]string{
+					"server1": "localhost:6379",
+					"server2": "localhost:6379",
+				},
+			},
 		},
 	}, rediser.WithInstance)
 
@@ -50,6 +59,7 @@ func main() {
 	rediser.Instance().Connect().Set(ctx, "ccc", "1", 0).Err() // use instance
 	rediser.Connect().Set(ctx, "ddd", "1", 0).Err()            // use instance connect
 }
+
 ```
 
 ## License
