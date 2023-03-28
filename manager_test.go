@@ -12,70 +12,70 @@ var ctx = context.Background()
 
 func TestRediser(t *testing.T) {
 	m := New(&Config{
-		ClientConfig: &ClientConfig{
-			Default: "default",
-			Connections: map[string]ConnectionClientFunc{
-				"default": func() *redis.Client {
-					return redis.NewClient(&redis.Options{
-						Addr:     "localhost:6379",
-						Password: "", // no password set
-						DB:       0,  // use default DB
-					})
-				},
-				"test": func() *redis.Client {
-					return redis.NewClient(&redis.Options{
-						Addr:     "localhost:6379",
-						Password: "", // no password set
-						DB:       1,  // use default DB
-					})
-				},
+		Default: "db1",
+		Connections: map[string]Configable{
+			"db1": &redis.Options{
+				Addr:     "localhost:6379",
+				Password: "", // no password set
+				DB:       0,  // use default DB
+			},
+			"db2": &redis.Options{
+				Addr:     "localhost:6379",
+				Password: "", // no password set
+				DB:       1,  // use default DB
+			},
+			"db3": &redis.ClusterOptions{
+				Addrs: []string{"localhost:6379", "localhost:6379"},
 			},
 		},
-	})
+	}, WithInstance)
 
-	// use db 0
-	assert.Nil(t, m.Client().Set(ctx, "aaa", "1", time.Second*2).Err())
-	assert.Equal(t, "1", m.Client().Get(ctx, "aaa").Val())
+	// use default(db1)
+	assert.Nil(t, m.Connect().Set(ctx, "aaa", "1", time.Second*2).Err())
+	assert.Equal(t, "1", m.Connect().Get(ctx, "aaa").Val())
 
-	// use db 1
-	assert.Nil(t, m.Client("test").Set(ctx, "bbb", "2", time.Second*5).Err())
-	assert.Equal(t, "2", m.Client("test").Get(ctx, "bbb").Val())
+	// db1
+	assert.Equal(t, "1", m.Connect("db1").Get(ctx, "aaa").Val())
+	assert.Error(t, m.Connect("db2").Get(ctx, "aaa").Err())
 
-	// use db 0 to get db 1
-	assert.Error(t, m.Client().Get(ctx, "bbb").Err())
-	assert.Equal(t, "", m.Client().Get(ctx, "bbb").Val())
+	// db2
+	assert.Nil(t, m.Connect("db2").Set(ctx, "bbb", "1", time.Second*2).Err())
+	assert.Equal(t, "1", m.Connect("db2").Get(ctx, "bbb").Val())
+
+	// use instance
+	assert.Nil(t, Connect().Set(ctx, "ccc", "1", time.Second*2).Err())
+	assert.Equal(t, "1", Connect().Get(ctx, "ccc").Val())
 
 	// test sleep
 	time.Sleep(time.Second * 3)
-	assert.Equal(t, "", m.Client().Get(ctx, "aaa").Val())
+	assert.Equal(t, "", Connect().Get(ctx, "aaa").Val())
+
+	// not found
+	assert.Panics(t, func() {
+		m.Connect("not-found").Get(ctx, "aaa").Val()
+	})
 }
 
 func BenchmarkMap(b *testing.B) {
 	m := New(&Config{
-		ClientConfig: &ClientConfig{
-			Default: "default",
-			Connections: map[string]ConnectionClientFunc{
-				"default": func() *redis.Client {
-					return redis.NewClient(&redis.Options{
-						Addr:     "localhost:6379",
-						Password: "", // no password set
-						DB:       0,  // use default DB
-					})
-				},
-				"test": func() *redis.Client {
-					return redis.NewClient(&redis.Options{
-						Addr:     "localhost:6379",
-						Password: "", // no password set
-						DB:       1,  // use default DB
-					})
-				},
+		Default: "db1",
+		Connections: map[string]Configable{
+			"db1": &redis.Options{
+				Addr:     "localhost:6379",
+				Password: "", // no password set
+				DB:       0,  // use default DB
+			},
+			"db2": &redis.Options{
+				Addr:     "localhost:6379",
+				Password: "", // no password set
+				DB:       1,  // use default DB
 			},
 		},
 	})
 
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
-			go m.Client().Get(ctx, "default").Val()
+			go m.Connect().Get(ctx, "default").Val()
 		}
 	})
 }

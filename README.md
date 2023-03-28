@@ -1,7 +1,7 @@
 # Redis'er(Redis Manager)
 
 [![Go Version](https://badgen.net/github/release/go-packagist/rediser/stable)](https://github.com/go-packagist/rediser/releases)
-[![GoDoc](https://pkg.go.dev/badge/github.com/go-packagist/rediser)](https://pkg.go.dev/github.com/go-packagist/rediser)
+[![GoDoc](https://pkg.go.dev/badge/github.com/go-packagist/rediser/v2)](https://pkg.go.dev/github.com/go-packagist/rediser/v2)
 [![codecov](https://codecov.io/gh/go-packagist/rediser/branch/master/graph/badge.svg?token=5TWGQ9DIRU)](https://codecov.io/gh/go-packagist/rediser)
 [![Go Report Card](https://goreportcard.com/badge/github.com/go-packagist/rediser)](https://goreportcard.com/report/github.com/go-packagist/rediser)
 [![tests](https://github.com/go-packagist/rediser/actions/workflows/go.yml/badge.svg)](https://github.com/go-packagist/rediser/actions/workflows/go.yml)
@@ -10,7 +10,7 @@
 ## Installation
 
 ```bash
-go get github.com/go-packagist/rediser
+go get github.com/go-packagist/rediser/v2
 ```
 
 ## Usage
@@ -20,7 +20,7 @@ package main
 
 import (
 	"context"
-	"github.com/go-packagist/rediser"
+	"github.com/go-packagist/rediser/v2"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -28,60 +28,27 @@ var ctx = context.Background()
 
 func main() {
 	m := rediser.New(&rediser.Config{
-		ClientConfig: &rediser.ClientConfig{
-			Default: "default",
-			Connections: map[string]rediser.ConnectionClientFunc{
-				"default": func() *redis.Client {
-					return redis.NewClient(&redis.Options{
-						Addr:     "localhost:6379",
-						Password: "", // no password set
-						DB:       0,  // use default DB
-					})
-				},
-				"test": func() *redis.Client {
-					return redis.NewClient(&redis.Options{
-						Addr:     "localhost:6379",
-						Password: "", // no password set
-						DB:       1,  // use default DB
-					})
-				},
+		Default: "db1",
+		Connections: map[string]rediser.Configable{
+			"db1": &redis.Options{
+				Addr:     "localhost:6379",
+				Password: "", // no password set
+				DB:       0,  // use default DB
+			},
+			"db2": &redis.Options{
+				Addr:     "localhost:6379",
+				Password: "", // no password set
+				DB:       1,  // use default DB
 			},
 		},
-		ClusterConfig: &rediser.ClusterConfig{
-			Default: "default",
-			Connections: map[string]rediser.ConnectionClusterFunc{
-				"default": func() *redis.ClusterClient {
-					return redis.NewClusterClient(&redis.ClusterOptions{
-						Addrs: []string{"localhost:6379"},
-					})
-				},
-			},
-		},
-		RingConfig: &rediser.RingConfig{
-			Default: "default",
-			Connections: map[string]rediser.ConnectionRingFunc{
-				"default": func() *redis.Ring {
-					return redis.NewRing(&redis.RingOptions{
-						Addrs: map[string]string{
-							"shard1": "localhost:6379",
-						},
-					})
-				},
-			},
-		},
-	})
+	}, rediser.WithInstance)
 
-	// Example for Client
-	m.Client().Get(ctx, "aaa").Val()       // use client default config
-	m.Client("test").Get(ctx, "bbb").Val() // use client test config
-
-	// Example for Cluster
-	m.Cluster().Get(ctx, "aaa").Val() // use cluster default config
-
-	// Example for Ring
-	m.Ring().Get(ctx, "aaa").Val() // use ring default config
+	m.Connect().Set(ctx, "aaa", "1", 0).Err()                  // use default(db1)
+	m.Connect("db1").Set(ctx, "aaa", "1", 0).Err()             // db1
+	m.Connect("db2").Set(ctx, "bbb", "1", 0).Err()             // db2
+	rediser.Instance().Connect().Set(ctx, "ccc", "1", 0).Err() // use instance
+	rediser.Connect().Set(ctx, "ddd", "1", 0).Err()            // use instance connect
 }
-
 ```
 
 ## License
